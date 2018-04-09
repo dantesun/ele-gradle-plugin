@@ -30,9 +30,9 @@ pluginBundle {
   tags = ['gradle', 'general']
 
   plugins {
-    greetingsPlugin {
-      id = 'org.samples.greeting'
-      displayName = 'Gradle Greeting plugin'
+    elemePlugin {
+      id = 'me.ele.gradle'
+      displayName = 'Gradle plugin for Eleme'
     }
   }
 }

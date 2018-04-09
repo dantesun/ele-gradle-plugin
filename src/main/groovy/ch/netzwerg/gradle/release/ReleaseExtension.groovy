@@ -15,9 +15,7 @@
  */
 package ch.netzwerg.gradle.release
 
-import ch.netzwerg.gradle.release.pub.PubChannelContainer
 import org.gradle.api.Project
-import org.gradle.util.ConfigureUtil
 
 class ReleaseExtension {
 
@@ -28,7 +26,6 @@ class ReleaseExtension {
     private static final DEFAULT_VERSION_SUFFIX = '-SNAPSHOT'
 
     private final Project project
-    private final PubChannelContainer channelContainer
     private final File versionFile
 
     List<Object> dependsOn = DEFAULT_DEPENDS_ON
@@ -38,7 +35,6 @@ class ReleaseExtension {
 
     ReleaseExtension(Project project) {
         this.project = project
-        this.channelContainer = new PubChannelContainer()
         this.versionFile = project.file(DEFAULT_VERSION_FILE)
     }
 
@@ -46,14 +42,6 @@ class ReleaseExtension {
         this.dependsOn = Arrays.asList(paths)
     }
 
-    public PubChannelContainer publish(Closure closure) {
-        ConfigureUtil.configure(closure, channelContainer)
-        return channelContainer
-    }
-
-    public PubChannelContainer getPubChannels() {
-        return channelContainer;
-    }
 
     public String getTagName() {
         return tagPrefix + "$project.version" - versionSuffix

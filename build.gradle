@@ -14,7 +14,7 @@ apply from: "gradle/java.gradle"
 apply plugin: 'groovy'
 
 group = "me.ele"
-version = "1.0.2-SNAPSHOT"
+version = "1.0.2"
 
 dependencies {
   compile gradleApi()

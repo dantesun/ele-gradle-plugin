@@ -65,7 +65,7 @@ class ReleaseTask extends DefaultTask {
             releaseExtension.versionFile.text = releaseVersion
         }
 
-        commitVersionFile("Release v$project.version", releaseExtension)
+        commitVersionFile("Release ${releaseVersion}", releaseExtension)
         if (RELEASE_TASK_NAME == name) {
             createReleaseTag(releaseExtension.tagName)
         }

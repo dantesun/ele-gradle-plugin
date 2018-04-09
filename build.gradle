@@ -20,5 +20,19 @@ dependencies {
   compile gradleApi()
   compile localGroovy() //not needed for Java plugins
   // other dependencies that your plugin requires
+  compile 'junit:junit:4.12'
 }
 
+pluginBundle {
+  website = 'https://github.com/dantesun/ele-gradle-plugin'
+  vcsUrl = 'https://github.com/dantesun/ele-gradle-plugin'
+  description = 'Eleme Gradle Plugin'
+  tags = ['gradle', 'general']
+
+  plugins {
+    greetingsPlugin {
+      id = 'org.samples.greeting'
+      displayName = 'Gradle Greeting plugin'
+    }
+  }
+}

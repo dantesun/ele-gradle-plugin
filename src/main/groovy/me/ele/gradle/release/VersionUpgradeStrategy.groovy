@@ -1,4 +1,4 @@
-package ch.netzwerg.gradle.release
+package me.ele.gradle.release
 
 interface VersionUpgradeStrategy {
 

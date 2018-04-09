@@ -1,4 +1,4 @@
-package ch.netzwerg.gradle.release
+package me.ele.gradle.release
 
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder

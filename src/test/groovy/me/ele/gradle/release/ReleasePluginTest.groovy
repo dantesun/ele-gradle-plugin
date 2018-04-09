@@ -1,4 +1,4 @@
-package ch.netzwerg.gradle.release
+package me.ele.gradle.release
 
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
@@ -41,8 +41,8 @@ class ReleasePluginTest {
         assertEquals(TEST_VERSION_NUMBER.trim(), project.version)
         assertNotNull(project.extensions.findByName(ReleasePlugin.RELEASE_EXTENSION_NAME))
         assertNotNull(project.tasks.findByName(ReleasePlugin.RELEASE_TASK_NAME))
-        assertNotNull(project.tasks.findByName(ReleasePlugin.RELEASE_MAJOR_VERSION_TASK_NAME))
-        assertNotNull(project.tasks.findByName(ReleasePlugin.RELEASE_MINOR_VERSION_TASK_NAME))
+        assertNotNull(project.tasks.findByName(ReleasePlugin.PREPARE_MAJOR_VERSION_TASK_NAME))
+        assertNotNull(project.tasks.findByName(ReleasePlugin.PREPARE_MINOR_VERSION_TASK_NAME))
     }
 
 }

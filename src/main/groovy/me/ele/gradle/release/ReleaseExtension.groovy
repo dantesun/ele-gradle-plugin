@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.netzwerg.gradle.release
+package me.ele.gradle.release
 
 import org.gradle.api.Project
 
@@ -26,7 +26,7 @@ class ReleaseExtension {
     private static final DEFAULT_VERSION_SUFFIX = '-SNAPSHOT'
 
     private final Project project
-    private final File versionFile
+    private File versionFile
 
     List<Object> dependsOn = DEFAULT_DEPENDS_ON
     boolean push = DEFAULT_PUSH
@@ -50,5 +50,4 @@ class ReleaseExtension {
     public File getVersionFile() {
         return versionFile
     }
-
 }

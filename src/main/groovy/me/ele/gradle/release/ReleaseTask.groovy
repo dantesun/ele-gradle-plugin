@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ch.netzwerg.gradle.release
+package me.ele.gradle.release
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
@@ -33,11 +33,9 @@ class ReleaseTask extends DefaultTask {
     def release() {
         ReleaseExtension releaseExtension = project.getExtensions().getByType(ReleaseExtension.class)
         commitVersionFile("Release v$project.version", releaseExtension)
-        createReleaseTag(releaseExtension.tagName)
-        String nextVersion = getNextVersion(project.version as String, releaseExtension.versionSuffix)
-        LOGGER.debug("Updating '$releaseExtension.versionFile' contents to $nextVersion")
-        releaseExtension.versionFile.text = nextVersion
-        commitVersionFile("Prepare next release v$nextVersion", releaseExtension)
+        if(ReleasePlugin.RELEASE_TASK_NAME == name) {
+            createReleaseTag(releaseExtension.tagName)
+        }
         if (releaseExtension.push) {
             pushChanges(releaseExtension.tagName)
         }
@@ -49,7 +47,7 @@ class ReleaseTask extends DefaultTask {
     }
 
     def createReleaseTag(String tagName) {
-        LOGGER.debug("Creating release tag: $tagName")
+        project.logger.lifecycle("创建Tag $tagName")
         git 'tag', '-a', tagName, "-m Release $tagName"
     }
 

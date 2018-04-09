@@ -1,5 +1,6 @@
-package ch.netzwerg.gradle.release
+package me.ele.gradle.release
 
+import me.ele.gradle.release.VersionUpgradeStrategyFactory.VersionInfo
 import org.gradle.api.GradleException
 
 final class VersionUpgradeStrategyFactory {
@@ -32,7 +33,7 @@ final class VersionUpgradeStrategyFactory {
             @Override
             String getVersion(String currentVersion) {
                 VersionInfo info = parseVersionInfo(currentVersion - versionSuffix)
-                (info.major + 1) + ".0.0"
+                (info.major + 1) + ".0.0" + versionSuffix
             }
         }
     }
@@ -42,7 +43,7 @@ final class VersionUpgradeStrategyFactory {
             @Override
             String getVersion(String currentVersion) {
                 VersionInfo info = parseVersionInfo(currentVersion - versionSuffix)
-                "$info.major." + (info.minor + 1) + ".0"
+                "$info.major." + (info.minor + 1) + ".0" + versionSuffix
             }
         }
     }
@@ -51,12 +52,21 @@ final class VersionUpgradeStrategyFactory {
         return new VersionUpgradeStrategy() {
             @Override
             String getVersion(String currentVersion) {
-                currentVersion - versionSuffix
+                VersionInfo info = parseVersionInfo(currentVersion - versionSuffix)
+                "${info.major}.${info.minor}."  + (info.patch + 1) + versionSuffix
             }
         }
     }
 
-    public static VersionUpgradeStrategy createSnapshotVersionUpgradeStrategy() {
+    public static VersionUpgradeStrategy createReleaseVersion(String versionSuffix) {
+        return new VersionUpgradeStrategy() {
+            @Override
+            String getVersion(String currentVersion) {
+                currentVersion - versionSuffix
+            }
+        }
+    }
+    public static VersionUpgradeStrategy createCurrentVersion() {
         return new VersionUpgradeStrategy() {
             @Override
             String getVersion(String currentVersion) {

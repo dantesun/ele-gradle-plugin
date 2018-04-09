@@ -19,6 +19,8 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 import org.slf4j.LoggerFactory
 
+import static me.ele.gradle.release.ReleasePlugin.*
+
 class ReleaseTask extends DefaultTask {
 
     private static final LOGGER = LoggerFactory.getLogger(ReleaseTask.class)
@@ -29,11 +31,42 @@ class ReleaseTask extends DefaultTask {
         description = RELEASE_TASK_DESC
     }
 
+    private
+    VersionUpgradeStrategy resolveVersionUpgradeStrategy(String versionSuffix) {
+        switch (name) {
+            case PREPARE_MAJOR_VERSION_TASK_NAME:
+                return VersionUpgradeStrategyFactory.createMajorVersionUpgradeStrategy(versionSuffix)
+            case PREPARE_MINOR_VERSION_TASK_NAME:
+                return VersionUpgradeStrategyFactory.createMinorVersionUpgradeStrategy(versionSuffix)
+            case PREPARE_PATCH_VERSION_TASK_NAME:
+            case PREPARE_TASK_NAME:
+                return VersionUpgradeStrategyFactory.createPatchVersionUpgradeStrategy(versionSuffix)
+            case RELEASE_TASK_NAME:
+                return VersionUpgradeStrategyFactory.createReleaseVersion(versionSuffix)
+        }
+        return null
+    }
+
     @TaskAction
     def release() {
+        checkUncommittedChanges()
         ReleaseExtension releaseExtension = project.getExtensions().getByType(ReleaseExtension.class)
+        VersionUpgradeStrategy upgradeStrategy = resolveVersionUpgradeStrategy(releaseExtension.versionSuffix)
+        assert null != upgradeStrategy: "Unable to determine version strategy!"
+
+        def currentVersion = releaseExtension.versionFile.text.trim()
+        def releaseVersion = upgradeStrategy.getVersion(currentVersion)
+        assert currentVersion != releaseVersion: "Version upgrade is failed!"
+
+        if (project.gradle.startParameter.dryRun) {
+            project.logger.lifecycle("Writing release version '$releaseVersion' to file '$releaseExtension.versionFile'")
+        } else {
+            LOGGER.debug("Writing release version '$releaseVersion' to file '$releaseExtension.versionFile'")
+            releaseExtension.versionFile.text = releaseVersion
+        }
+
         commitVersionFile("Release v$project.version", releaseExtension)
-        if(ReleasePlugin.RELEASE_TASK_NAME == name) {
+        if (RELEASE_TASK_NAME == name) {
             createReleaseTag(releaseExtension.tagName)
         }
         if (releaseExtension.push) {
@@ -41,14 +74,21 @@ class ReleaseTask extends DefaultTask {
         }
     }
 
+    def checkUncommittedChanges() {
+        git('diff', '--exit-code')({ "GIT repository has changes!" })
+        git('diff', '--cached', '--exit-code')({ "GIT repository has un-committed changes!" })
+    }
+
     def commitVersionFile(String msg, ReleaseExtension releaseExtension) {
         LOGGER.debug("Committing version file: $msg")
-        git 'commit', '-m', msg, releaseExtension.versionFile.name
+        git('commit', '-m', msg, releaseExtension.versionFile.name)({
+            "Unable to commit version file!"
+        })
     }
 
     def createReleaseTag(String tagName) {
-        project.logger.lifecycle("创建Tag $tagName")
-        git 'tag', '-a', tagName, "-m Release $tagName"
+        project.logger.lifecycle("Create Tag $tagName")
+        git('tag', '-a', tagName, "-m Release $tagName")({ "Failed to create tag!" })
     }
 
     def static getNextVersion(String currentVersion, String suffix) {
@@ -59,11 +99,27 @@ class ReleaseTask extends DefaultTask {
 
     def pushChanges(String tag) {
         LOGGER.debug('Pushing changes to repository')
-        git 'push', 'origin', tag
-        git 'push', 'origin', 'HEAD'
+        git('push', 'origin', tag)({ "Failed to push tag!" })
+        git('push', 'origin', 'HEAD')({ "Failed to push HEAD!" })
     }
 
-    def git(Object[] arguments) {
+    Closure<?> git(Object... arguments) {
+        if (project.gradle.startParameter.dryRun) {
+            project.logger.lifecycle("git ${arguments.join(' ')}")
+        }
+        def (gitOutput, result) = exec(arguments)
+        if (!gitOutput.isEmpty()) {
+            project.logger.info(gitOutput)
+        }
+        return { Closure<?> errorHint ->
+            if (result.exitValue != 0) {
+                project.logger.error("${errorHint.call(result)}(git ${arguments.join(' ')})")
+                result.assertNormalExitValue()
+            }
+        }
+    }
+
+    def exec(Object[] arguments) {
         LOGGER.debug("git $arguments")
         def output = new ByteArrayOutputStream()
         def result = project.exec {
@@ -74,11 +130,7 @@ class ReleaseTask extends DefaultTask {
         }
         // output result to debug
         String gitOutput = output.toString().trim()
-        if (!gitOutput.isEmpty()) {
-            LOGGER.debug(gitOutput)
-        }
-        // check if successful after logging
-        result.assertNormalExitValue()
+        return [gitOutput, result]
     }
 
 }

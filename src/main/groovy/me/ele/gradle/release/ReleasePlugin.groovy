@@ -23,6 +23,7 @@ class ReleasePlugin implements Plugin<Project> {
 
     public static final String RELEASE_TASK_GROUP_NAME = 'Release'
     public static final String RELEASE_TASK_NAME = 'release'
+    public static final String PREPARE_TASK_NAME = 'prepare'
     public static final String PREPARE_MAJOR_VERSION_TASK_NAME = 'prepareMajorVersion'
     public static final String PREPARE_MINOR_VERSION_TASK_NAME = 'prepareMinorVersion'
     public static final String PREPARE_PATCH_VERSION_TASK_NAME = 'preparePatchVersion'
@@ -31,7 +32,8 @@ class ReleasePlugin implements Plugin<Project> {
             (RELEASE_TASK_NAME)              : "Creates a tagged non-SNAPSHOT release.",
             (PREPARE_MAJOR_VERSION_TASK_NAME): 'Upgrades to next major SNAPSHOT version',
             (PREPARE_MINOR_VERSION_TASK_NAME): 'Upgrades to next minor SNAPSHOT version',
-            (PREPARE_PATCH_VERSION_TASK_NAME): 'Upgrades to next patch SNAPSHOT version'
+            (PREPARE_PATCH_VERSION_TASK_NAME): 'Upgrades to next patch SNAPSHOT version',
+            (PREPARE_TASK_NAME):               "Same as ${PREPARE_PATCH_VERSION_TASK_NAME}"
     ]
 
     public static final String RELEASE_EXTENSION_NAME = 'release'
@@ -54,33 +56,10 @@ class ReleasePlugin implements Plugin<Project> {
         }
 
         def versionFromFile = releaseExtension.versionFile.text.trim()
-        def taskNames = project.gradle.startParameter.taskNames
 
-        VersionUpgradeStrategy upgradeStrategy = resolveVersionUpgradeStrategy(taskNames, releaseExtension.versionSuffix)
-        def releaseVersion = upgradeStrategy.getVersion(versionFromFile)
-        LOGGER.debug("Using release version '$releaseVersion'")
-        if (!project.gradle.startParameter.dryRun && (versionFromFile != releaseVersion)) {
-            LOGGER.debug("Writing release version '$releaseVersion' to file '$releaseExtension.versionFile'")
-            releaseExtension.versionFile.text = releaseVersion
-        }
-        project.logger.lifecycle("Eleme Release Plugin: Using version $releaseVersion")
+        project.logger.lifecycle("Eleme Release Plugin: Using version $versionFromFile")
         project.rootProject.allprojects { p ->
-            p.version = releaseVersion
-        }
-    }
-
-    private
-    static VersionUpgradeStrategy resolveVersionUpgradeStrategy(List<String> taskNames, String versionSuffix) {
-        if (taskNames.contains(PREPARE_MAJOR_VERSION_TASK_NAME)) {
-            return VersionUpgradeStrategyFactory.createMajorVersionUpgradeStrategy(versionSuffix)
-        } else if (taskNames.contains(PREPARE_MINOR_VERSION_TASK_NAME)) {
-            return VersionUpgradeStrategyFactory.createMinorVersionUpgradeStrategy(versionSuffix)
-        } else if (taskNames.contains(PREPARE_PATCH_VERSION_TASK_NAME)) {
-            return VersionUpgradeStrategyFactory.createPatchVersionUpgradeStrategy(versionSuffix)
-        } else if (taskNames.contains(RELEASE_TASK_NAME)) {
-            return VersionUpgradeStrategyFactory.createReleaseVersion(versionSuffix)
-        } else {
-            return VersionUpgradeStrategyFactory.createCurrentVersion()
+            p.version = versionFromFile
         }
     }
 

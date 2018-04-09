@@ -1,0 +1,74 @@
+apply plugin: 'java'
+
+sourceSets {
+    test {
+        output.resourcesDir = output.classesDirs.singleFile
+    }
+    main {
+        output.resourcesDir = output.classesDirs.singleFile
+    }
+}
+apply plugin: 'idea'
+idea {
+    module {
+        outputDir sourceSets.main.output.singleFile
+        testOutputDir sourceSets.test.output.singleFile
+        downloadSources = true
+    }
+}
+
+tasks.withType(AbstractCompile) {
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+    options.compilerArgs << "-parameters"
+    options.compilerArgs << "-Xlint:all"
+    options.encoding = "UTF-8"
+}
+
+jar {
+    manifest {
+        attributes 'Implementation-Version': project.version,
+                'Implementation-Title': project.name,
+                'Implementation-Vendor-Id': project.group
+    }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    from sourceSets.main.allSource
+    classifier 'sources'
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+tasks.withType(Test) {
+    testLogging {
+        // set options for log level LIFECYCLE
+        events TestLogEvent.PASSED,
+                TestLogEvent.SKIPPED, TestLogEvent.FAILED, TestLogEvent.STANDARD_OUT
+        showExceptions true
+        exceptionFormat TestExceptionFormat.FULL
+        showCauses true
+        showStackTraces true
+
+        // set options for log level DEBUG and INFO
+        debug {
+            events TestLogEvent.STARTED, TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED, TestLogEvent.STANDARD_OUT, TestLogEvent.STANDARD_ERROR
+            exceptionFormat TestExceptionFormat.FULL
+        }
+        info.events = debug.events
+        info.exceptionFormat = debug.exceptionFormat
+
+        afterSuite { desc, result ->
+            if (!desc.parent) { // will match the outermost suite
+                def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
+                def startItem = '|  ', endItem = '  |'
+                def repeatLength = startItem.length() + output.length() + endItem.length()
+                println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
+            }
+        }
+    }
+}

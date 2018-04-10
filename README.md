@@ -4,6 +4,7 @@ But it is still served as a general purpose plugin.
 
 It steals code from the following plugins:
 * https://github.com/netzwerg/gradle-release-plugin
+
 Usage
 -------------
 * [Gradle Plugin Portal](https://plugins.gradle.org/plugin/me.ele.gradle)

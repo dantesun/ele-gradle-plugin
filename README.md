@@ -13,7 +13,7 @@ Usage
 * `gradle release` will strip the `SNAPSHOT` suffix and create a tag
 * `gradle prepare` will modifies `version.txt`, increase the version number's patch part
 * after `release/prepare`, use `git push` to push the changes
-* prepareXXX tasks don't care if current version is SNAPSHOT or not, always increases the version number
+* prepareXXX tasks always append -SNAPSHOT suffix and always increases the version number
 
 Release tasks
 -------------
